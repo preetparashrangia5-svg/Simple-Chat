@@ -3,130 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Chat</title>
+    <title>Global Chat</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #282c34;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .chat-container {
-            width: 350px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        .chat-header {
-            background: #4caf50;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        .chat-messages {
-            height: 400px;
-            padding: 15px;
-            overflow-y: auto;
-            background: #e5ddd5;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .message {
-            padding: 10px 15px;
-            border-radius: 20px;
-            max-width: 75%;
-            word-wrap: break-word;
-            font-size: 15px;
-        }
-        .my-message {
-            background: #dcf8c6;
-            align-self: flex-end;
-            border-bottom-right-radius: 0;
-        }
-        .chat-input-area {
-            display: flex;
-            padding: 15px;
-            background: #f0f0f0;
-            border-top: 1px solid #ccc;
-        }
-        #messageInput {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 20px;
-            outline: none;
-            font-size: 15px;
-            padding-left: 15px;
-        }
-        #sendBtn {
-            background: #4caf50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            margin-left: 10px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-        #sendBtn:hover {
-            background: #388e3c;
-        }
+        /* Exact same styling as before */
+        body { font-family: Arial, sans-serif; background-color: #282c34; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .chat-container { width: 350px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; }
+        .chat-header { background: #4caf50; color: white; padding: 15px; text-align: center; font-size: 20px; font-weight: bold; }
+        .chat-messages { height: 400px; padding: 15px; overflow-y: auto; background: #e5ddd5; display: flex; flex-direction: column; gap: 10px; }
+        .message { padding: 10px 15px; border-radius: 20px; max-width: 75%; word-wrap: break-word; font-size: 15px; background: #fff; border: 1px solid #ccc;}
+        .chat-input-area { display: flex; padding: 15px; background: #f0f0f0; border-top: 1px solid #ccc; }
+        #messageInput { flex: 1; padding: 10px; border: none; border-radius: 20px; outline: none; font-size: 15px; padding-left: 15px; }
+        #sendBtn { background: #4caf50; color: white; border: none; padding: 10px 20px; margin-left: 10px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        #sendBtn:hover { background: #388e3c; }
     </style>
 </head>
 <body>
 
 <div class="chat-container">
-    <div class="chat-header">My Chat App</div>
+    <div class="chat-header">Global Chat Room</div>
     <div class="chat-messages" id="messages">
         </div>
     <div class="chat-input-area">
         <input type="text" id="messageInput" placeholder="Type a message...">
-        <button id="sendBtn" onclick="displayLocalMessage()">Send</button>
+        <button id="sendBtn">Send</button>
     </div>
 </div>
 
-<script>
-    // This function shows the message on your screen when you click Send
-    function displayLocalMessage() {
-        const input = document.getElementById('messageInput');
-        const messageText = input.value;
-        
-        // Check if the input is not empty
-        if (messageText.trim() !== '') {
-            const messagesDiv = document.getElementById('messages');
-            
-            // Create a new message bubble
-            const newMessage = document.createElement('div');
-            newMessage.classList.add('message', 'my-message');
-            newMessage.innerText = messageText;
-            
-            // Add it to the chat window
-            messagesDiv.appendChild(newMessage);
-            
-            // Scroll to the bottom so you always see the newest message
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            
-            // Clear the input box so you can type the next message
-            input.value = '';
+<script type="module">
+    // Import Firebase tools
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+    
+    const firebaseConfig = {
+     apiKey: "AIzaSyA37BqAgXGTMVTzhv7yhfLsi7_f55GcG4g",
+     authDomain: "my-simple-chat-28251.firebaseapp.com",
+     databaseURL: "https://my-simple-chat-28251-default-rtdb.firebaseio.com",
+     projectId: "my-simple-chat-28251",
+     storageBucket: "my-simple-chat-28251.firebasestorage.app",
+     messagingSenderId: "928561900972",
+     appId: "1:928561900972:web:46fb2ca396323d6a015e09"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const messagesRef = ref(db, "messages");
+
+    const input = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const messagesDiv = document.getElementById('messages');
+
+    // Function to send a message to Firebase Database
+    function sendMessage() {
+        const text = input.value;
+        if (text.trim() !== '') {
+            push(messagesRef, { text: text });
+            input.value = ''; // clear input box
         }
     }
 
-    // Allow pressing "Enter" on the keyboard to send the message
-    document.getElementById("messageInput").addEventListener("keypress", function(event) {
+    // When the send button is clicked
+    sendBtn.addEventListener("click", sendMessage);
+
+    // When "Enter" key is pressed
+    input.addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
             event.preventDefault();
-            displayLocalMessage();
+            sendMessage();
         }
+    });
+
+    // Listen for new messages arriving from Firebase Database
+    onChildAdded(messagesRef, (data) => {
+        const messageData = data.val();
+        
+        // Create the message visual bubble
+        const newMessage = document.createElement('div');
+        newMessage.classList.add('message');
+        newMessage.innerText = messageData.text;
+        
+        messagesDiv.appendChild(newMessage);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight; // auto-scroll down
     });
 </script>
 
